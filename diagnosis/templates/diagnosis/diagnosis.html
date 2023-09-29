@@ -1,0 +1,88 @@
+{% extends "diagnosis/base.html" %}
+
+{% block content %}
+
+    <div class="chat-wrapper">
+        <div class="chat-container">
+            <div class="chat-box" id="chatBox">
+                <div class="bot-message" id="initialMessage"></div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="請輸入您的症狀...">
+            <button id="submitButton">提交</button>
+        </div>
+    </div>
+
+    <script>
+        function typeMessage(message, element, callback) {
+            let i = 0;
+
+            function typeChar() {
+                if (i < message.length) {
+                    element.textContent += message[i];
+                    i++;
+                    setTimeout(typeChar, 60);  // 調整數字可改變輸出速度
+                } else {
+                    if (callback) callback();
+                }
+            }
+
+            typeChar();
+        }
+
+        document.getElementById("submitButton").addEventListener("click", function() {
+            let userInput = document.getElementById("userInput").value;
+            if(userInput) {
+                let userDiv = document.createElement("div");
+                userDiv.classList.add("user-message");
+                userDiv.textContent = userInput;
+                document.getElementById("chatBox").appendChild(userDiv);
+
+                document.getElementById("userInput").value = '';
+
+                fetch("/diagnosis/diagnosis/", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify({
+                        user_input: userInput
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    let botDiv = document.createElement("div");
+                    botDiv.classList.add("bot-message");
+                    document.getElementById("chatBox").appendChild(botDiv);
+                    
+                    typeMessage(data.diagnosis, botDiv);
+                });
+            }
+        });
+    </script>
+
+    <script>
+        // 當DOM（文檔物件模型）載入完成後
+        document.addEventListener('DOMContentLoaded', function() {
+            // 選擇輸入框元素
+            const inputElement = document.querySelector('.input-container input');
+
+            // 監聽輸入框的鍵盤按下事件
+            inputElement.addEventListener('keydown', function(event) {
+                // 如果按下的鍵是enter（鍵碼為13）
+                if (event.keyCode === 13) {
+                    event.preventDefault();  // 阻止預設的enter行為（例如換行）
+                    // 觸發點擊提交按鈕的行為
+                    document.querySelector('.input-container button').click();
+                }
+            });
+
+            // 這邊我添加了一段代碼來逐字顯示初始消息。
+            typeMessage("{{ initial_message }}", document.getElementById("initialMessage"));
+        });
+    </script>
+
+{% endblock %}

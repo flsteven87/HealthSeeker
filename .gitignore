@@ -1,0 +1,67 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+
+# Django specific
+*.log
+*.pot
+*.pyc
+db.sqlite3
+media/
+
+# Flask specific (in case you have Flask apps in your project)
+instance/
+.webassets-cache
+
+# If you are using Celery
+celerybeat-schedule.*
+celerybeat.pid
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDEs and editors
+# PyCharm (or JetBrains IDE)
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Environment variables (if you use .env files for them)
+.env
+.env.local
+.env.dev
+
+# Virtual environment (if not using a better location outside the project)
+venv/
+*.venv/
+.venv/
+
+# Other
+*.swp
+*.swo
+*~
