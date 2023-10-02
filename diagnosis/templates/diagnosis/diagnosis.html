@@ -2,87 +2,181 @@
 
 {% block content %}
 
-    <div class="chat-wrapper">
-        <div class="chat-container">
-            <div class="chat-box" id="chatBox">
-                <div class="bot-message" id="initialMessage"></div>
-            </div>
-        </div>
-
-        <div class="input-container">
-            <input type="text" id="userInput" placeholder="請輸入您的症狀...">
-            <button id="submitButton">提交</button>
+<div class="chat-wrapper">
+    <div class="chat-container">
+        <div class="chat-box" id="chatBox">
+            <div class="bot-message" id="initialMessage"></div>
         </div>
     </div>
 
-    <script>
-        function typeMessage(message, element, callback) {
-            let i = 0;
+    <div class="input-container">
+        <input type="text" id="userInput" placeholder="請輸入您的症狀...">
+        <button id="submitButton">提交</button>
+        <!-- 移除了註冊按鈕的HTML部分 -->
+    </div>
 
-            function typeChar() {
-                if (i < message.length) {
-                    element.textContent += message[i];
-                    i++;
-                    setTimeout(typeChar, 60);  // 調整數字可改變輸出速度
-                } else {
-                    if (callback) callback();
-                }
+    <!-- 註冊模態框的HTML結構 -->
+    <!-- <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeRegister">&times;</span>
+            <h2>註冊</h2>
+            <label for="idCard">身分證字號:</label>
+            <input type="text" id="idCard" required>
+            <label for="password">密碼:</label>
+            <input type="password" id="password" required>
+            <button id="submitRegister">提交註冊</button>
+        </div>
+    </div> -->
+
+    <!-- 註冊模態框的HTML結構 -->
+    <div id="registerModal" class="modal custom-register-modal">
+        <div class="modal-content custom-modal-content">
+            <span class="close-btn custom-close-btn" id="closeRegister">&times;</span>
+            <h2 class="custom-modal-title">註冊</h2>
+            <label for="idCard" class="custom-modal-label">身分證字號:</label>
+            <input type="text" id="idCard" required class="custom-modal-input">
+            <label for="password" class="custom-modal-label">密碼:</label>
+            <input type="password" id="password" required class="custom-modal-input">
+            <button id="submitRegister" class="custom-modal-button">提交註冊</button>
+        </div>
+    </div>
+
+<script>
+    function typeMessage(message, element, callback) {
+        let i = 0;
+
+        function typeChar() {
+            if (i < message.length) {
+                element.textContent += message[i];
+                i++;
+                setTimeout(typeChar, 60);  // 調整數字可改變輸出速度
+            } else {
+                if (callback) callback();
             }
-
-            typeChar();
         }
 
-        document.getElementById("submitButton").addEventListener("click", function() {
-            let userInput = document.getElementById("userInput").value;
-            if(userInput) {
-                let userDiv = document.createElement("div");
-                userDiv.classList.add("user-message");
-                userDiv.textContent = userInput;
-                document.getElementById("chatBox").appendChild(userDiv);
+        typeChar();
+    }
 
-                document.getElementById("userInput").value = '';
+    // 移除了原先模態框相關的JavaScript功能
 
-                fetch("/diagnosis/diagnosis/", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}',
-                    },
-                    body: JSON.stringify({
-                        user_input: userInput
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    let botDiv = document.createElement("div");
-                    botDiv.classList.add("bot-message");
-                    document.getElementById("chatBox").appendChild(botDiv);
-                    
-                    typeMessage(data.diagnosis, botDiv);
-                });
+    var registerModal = document.getElementById("registerModal");
+    var closeRegisterBtn = document.getElementById("closeRegister");
+
+    function openRegisterModal() {
+        registerModal.style.display = "block";
+    }
+
+    function closeRegisterModal() {
+        registerModal.style.display = "none";
+    }
+
+    closeRegisterBtn.onclick = function() {
+        closeRegisterModal();
+    }
+
+    // 處理註冊請求
+    document.getElementById("submitRegister").addEventListener("click", function() {
+        var idCardValue = document.getElementById("idCard").value;
+        var passwordValue = document.getElementById("password").value;
+
+        // 發送到伺服器
+        fetch("/diagnosis/register/", {  
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({
+                id_card: idCardValue,
+                password: passwordValue
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("註冊成功!");
+                closeRegisterModal();
+            } else {
+                alert("註冊失敗: " + data.error);
             }
         });
-    </script>
+    });
 
-    <script>
-        // 當DOM（文檔物件模型）載入完成後
-        document.addEventListener('DOMContentLoaded', function() {
-            // 選擇輸入框元素
-            const inputElement = document.querySelector('.input-container input');
+    document.getElementById("submitButton").addEventListener("click", function() {
+        let userInput = document.getElementById("userInput").value;
+        if(userInput) {
+            let userDiv = document.createElement("div");
+            userDiv.classList.add("user-message");
+            userDiv.textContent = userInput;
+            document.getElementById("chatBox").appendChild(userDiv);
 
-            // 監聽輸入框的鍵盤按下事件
-            inputElement.addEventListener('keydown', function(event) {
-                // 如果按下的鍵是enter（鍵碼為13）
-                if (event.keyCode === 13) {
-                    event.preventDefault();  // 阻止預設的enter行為（例如換行）
-                    // 觸發點擊提交按鈕的行為
-                    document.querySelector('.input-container button').click();
-                }
+            document.getElementById("userInput").value = '';
+
+            fetch("/diagnosis/diagnosis/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({
+                    user_input: userInput
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let botDiv = document.createElement("div");
+                botDiv.classList.add("bot-message");
+                document.getElementById("chatBox").appendChild(botDiv);
+
+                typeMessage(data.diagnosis, botDiv, function() {
+                    if (data.register_required) {
+                        let additionalMessageDiv = document.createElement("div");
+                        additionalMessageDiv.classList.add("bot-message");
+                        document.getElementById("chatBox").appendChild(additionalMessageDiv);
+
+                        // 使用typeMessage逐字輸出最後一句話
+                        typeMessage("我了解你的狀況了，現在請你填寫一下你的資料，我將為您推薦附近合適的診所。", additionalMessageDiv, function() {
+                            // 完成後等待2秒再彈出註冊畫面
+                            setTimeout(openRegisterModal, 2000);
+                        });
+                    }
+                });
             });
+        }
+    });
 
-            // 這邊我添加了一段代碼來逐字顯示初始消息。
-            typeMessage("{{ initial_message }}", document.getElementById("initialMessage"));
+    // 修改後的 typeMessage 函式，增加了一個 callback 參數
+    function typeMessage(message, element, callback) {
+        let i = 0;
+        let typingSpeed = 50;  // 可依需求調整打字速度
+
+        function typeChar() {
+            if (i < message.length) {
+                element.textContent += message.charAt(i);
+                i++;
+                setTimeout(typeChar, typingSpeed);
+            } else if (callback) {
+                callback();  // 打字完畢後執行 callback
+            }
+        }
+        typeChar();
+    }
+
+
+    // 當DOM（文檔物件模型）載入完成後
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputElement = document.querySelector('.input-container input');
+
+        inputElement.addEventListener('keydown', function(event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                document.querySelector('.input-container button').click();
+            }
         });
-    </script>
+
+        typeMessage("{{ initial_message }}", document.getElementById("initialMessage"));
+    });
+</script>
 
 {% endblock %}
